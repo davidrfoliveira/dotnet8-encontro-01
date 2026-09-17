@@ -1,5 +1,5 @@
 // ============================================================================
-// ENCONTRO 1 — GABARITO DO EXERCÍCIO
+// ENCONTRO 1 —  EXERCÍCIO
 // Domínio inicial da API de Gestão de Apólices e Sinistros
 // ----------------------------------------------------------------------------
 // Esta é uma das soluções possíveis. O objetivo do exercício não é chegar
