@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Seguradora.Api.Diagnostico;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +9,7 @@ builder.Services.AddTransient<IOperacaoTransient, OperacaoDiagnostico>();
 builder.Services.AddScoped<IOperacaoScoped, OperacaoDiagnostico>();
 builder.Services.AddSingleton<IOperacaoSingleton, OperacaoDiagnostico>();
 builder.Services.AddScoped<IServicoDiagnostico, ServicoDiagnostico>();
-
+builder.Services.AddScoped<IApoliceRepositorio, ApoliceRepositorioEmMemoria>();
 
 
 builder.Services.AddControllers();
@@ -30,6 +31,14 @@ app.MapGet("/diagnostico/ciclo-de-vida",  (IOperacaoTransient t1, IOperacaoTra
 
 
 
+var grupo = app.MapGroup("/apolices").WithTags("Apólices");
+
+grupo.MapGet("/{id}",
+    Results<Ok<Apolice>, NotFound> (string id, IApoliceRepositorio repo) =>
+    {
+        var a = repo.ObterPorId(id);
+        return a is null ? TypedResults.NotFound() : TypedResults.Ok(a);
+    });
 
 
 // Configure the HTTP request pipeline.
@@ -44,5 +53,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+
+
 
 app.Run();
