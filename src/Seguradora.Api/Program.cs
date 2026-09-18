@@ -18,7 +18,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UseMiddleware<TratamentoDeErroMiddleware>();
 
+app.MapGet("/diagnostico/forcar-erro/{tipo}", (string tipo) =>
+{
+    if (tipo == "argument") throw new ArgumentException("CPF inválido de propósito");
+    if (tipo == "operacao") throw new InvalidOperationException("Regra de negócio violada de propósito");
+    throw new Exception("Erro genérico de propósito");
+});
 
 app.MapGet("/diagnostico/ciclo-de-vida",  (IOperacaoTransient t1, IOperacaoTransient t2,
    IOperacaoScoped s1, IOperacaoScoped s2,
