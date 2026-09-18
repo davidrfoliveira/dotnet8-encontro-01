@@ -11,6 +11,11 @@ builder.Services.AddSingleton<IOperacaoSingleton, OperacaoDiagnostico>();
 builder.Services.AddScoped<IServicoDiagnostico, ServicoDiagnostico>();
 builder.Services.AddScoped<IApoliceRepositorio, ApoliceRepositorioEmMemoria>();
 
+builder.Services.AddOptions<OpcoesDaSeguradora>()
+    .Bind(builder.Configuration.GetSection("Seguradora"))
+    .Validate(o => o.FranquiaMinima > 0, "FranquiaMinima deve ser maior que zero.")
+    .ValidateOnStart();
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
