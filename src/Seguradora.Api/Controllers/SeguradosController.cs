@@ -13,4 +13,7 @@ public class SeguradosController : ControllerBase
   
       [HttpGet]
       public ActionResult<IEnumerable<Segurado>> Listar() => Ok(_repo.Listar());
+
+      [HttpPost]
+      public ActionResult<IEnumerable<Segurado>> ListarId(string id) => Ok(_repo.ObterPorId(id));
 }

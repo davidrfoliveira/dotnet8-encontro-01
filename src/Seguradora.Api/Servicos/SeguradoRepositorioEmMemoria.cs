@@ -6,4 +6,7 @@ public class SeguradoRepositorioEmMemoria : ISeguradoRepositorio
               new() { Nome = "João Souza", Documento = new Cpf("11144477735"), DataNascimento = new DateTime(2004, 9, 30) }
     };
       public IReadOnlyList<Segurado> Listar() => _segurados;
+
+    public Segurado? ObterPorId(string id) => _segurados.FirstOrDefault(p => p.Documento.Numero == id);
+    
 }
