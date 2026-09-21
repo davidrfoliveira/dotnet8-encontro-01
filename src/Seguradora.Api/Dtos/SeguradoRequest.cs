@@ -1,0 +1,1 @@
+public record SeguradoRequest(string Nome, string Cpf, DateTime DataNascimento);

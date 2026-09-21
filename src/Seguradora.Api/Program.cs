@@ -4,7 +4,7 @@ using Seguradora.Api.Diagnostico;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<ISeguradoRepositorio, SeguradoRepositorioEmMemoria>();
+builder.Services.AddSingleton<ISeguradoRepositorio, SeguradoRepositorioEmMemoria>();
 builder.Services.AddTransient<IOperacaoTransient, OperacaoDiagnostico>();
 builder.Services.AddScoped<IOperacaoScoped, OperacaoDiagnostico>();
 builder.Services.AddSingleton<IOperacaoSingleton, OperacaoDiagnostico>();
