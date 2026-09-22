@@ -1,7 +1,13 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Seguradora.Api.Diagnostico;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<SeguradoraDbContext>(opcoes =>
+opcoes.UseSqlite(builder.Configuration.GetConnectionString("Seguradora")));
+
+
 
 // Add services to the container.
 builder.Services.AddSingleton<ISeguradoRepositorio, SeguradoRepositorioEmMemoria>();
