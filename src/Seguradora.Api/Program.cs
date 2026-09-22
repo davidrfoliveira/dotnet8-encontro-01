@@ -10,7 +10,11 @@ opcoes.UseSqlite(builder.Configuration.GetConnectionString("Seguradora")));
 
 
 // Add services to the container.
-builder.Services.AddSingleton<ISeguradoRepositorio, SeguradoRepositorioEmMemoria>();
+// builder.Services.AddSingleton<ISeguradoRepositorio, SeguradoRepositorioEmMemoria>();
+
+builder.Services.AddScoped<ISeguradoRepositorio, SeguradoEntityFrameworkRepositorio>();
+
+
 builder.Services.AddTransient<IOperacaoTransient, OperacaoDiagnostico>();
 builder.Services.AddScoped<IOperacaoScoped, OperacaoDiagnostico>();
 builder.Services.AddSingleton<IOperacaoSingleton, OperacaoDiagnostico>();
