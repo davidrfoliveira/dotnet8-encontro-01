@@ -1,4 +1,4 @@
-public class ApoliceRepositorioEmMemoria : IApoliceRepositorio
+public class ApoliceRepositorioEmMemoria 
 {
     private readonly List<Apolice> _apolices;
 
@@ -43,6 +43,6 @@ public class ApoliceRepositorioEmMemoria : IApoliceRepositorio
         _apolices = new List<Apolice> { auto, residencial, vida };
     }
 
-    public IReadOnlyList<Apolice> Listar() => _apolices;
-    public Apolice? ObterPorId(string id) => _apolices.FirstOrDefault(a => a.Id == id);
+    public IReadOnlyList<Apolice> ListarAsync() =>  _apolices;
+    public Apolice? ObterPorIdAsync(string id) => _apolices.FirstOrDefault(a => a.Id == id);
 }

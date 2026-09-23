@@ -1,5 +1,6 @@
 public interface IApoliceRepositorio
 {
-    IReadOnlyList<Apolice> Listar();
-    Apolice? ObterPorId(string id);
+    Task<IReadOnlyList<Apolice>> ListarAsync();
+    Task<Apolice?> ObterPorIdAsync(string id);
+    Task SalvarAlteracoesAsync();
 }

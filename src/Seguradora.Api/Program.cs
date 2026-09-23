@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Http.HttpResults;
+// using Microsoft.AspNetCore.Http.HttpResults;
 using Seguradora.Api.Diagnostico;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,13 +14,15 @@ opcoes.UseSqlite(builder.Configuration.GetConnectionString("Seguradora")));
 // builder.Services.AddSingleton<ISeguradoRepositorio, SeguradoRepositorioEmMemoria>();
 
 builder.Services.AddScoped<ISeguradoRepositorio, SeguradoEntityFrameworkRepositorio>();
+builder.Services.AddScoped<IApoliceRepositorio, ApoliceEntityFrameworkRepositorio>();
+builder.Services.AddScoped<ISinistroRepositorio, SinistroEntityFrameworkRepositorio>();
 
 
 builder.Services.AddTransient<IOperacaoTransient, OperacaoDiagnostico>();
 builder.Services.AddScoped<IOperacaoScoped, OperacaoDiagnostico>();
 builder.Services.AddSingleton<IOperacaoSingleton, OperacaoDiagnostico>();
 builder.Services.AddScoped<IServicoDiagnostico, ServicoDiagnostico>();
-builder.Services.AddScoped<IApoliceRepositorio, ApoliceRepositorioEmMemoria>();
+// builder.Services.AddScoped<IApoliceRepositorio, ApoliceRepositorioEmMemoria>();
 
 builder.Services.AddOptions<OpcoesDaSeguradora>()
     .Bind(builder.Configuration.GetSection("Seguradora"))
@@ -27,7 +30,11 @@ builder.Services.AddOptions<OpcoesDaSeguradora>()
     .ValidateOnStart();
 
 
-builder.Services.AddControllers();
+// builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+.AddJsonOptions(opcoes => opcoes.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -53,21 +60,13 @@ app.MapGet("/diagnostico/ciclo-de-vida",  (IOperacaoTransient t1, IOperacaoTra
 
 
 
-var grupo = app.MapGroup("/apolices").WithTags("Apólices");
-
-grupo.MapGet("/{id}",
-    Results<Ok<Apolice>, NotFound> (string id, IApoliceRepositorio repo) =>
-    {
-        var a = repo.ObterPorId(id);
-        return a is null ? TypedResults.NotFound() : TypedResults.Ok(a);
-    });
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    await SeedDeDados.PopularAsync(app.Services);
 }
 
 app.UseHttpsRedirection();
