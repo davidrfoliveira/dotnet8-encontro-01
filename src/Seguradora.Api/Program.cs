@@ -3,6 +3,7 @@ using Seguradora.Api.Diagnostico;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -89,7 +90,13 @@ builder.Services
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AnalistaDeSinistros", politica => politica
+        .RequireRole("Regulador", "Admin")
+        .RequireClaim("alcada"))
+    .AddPolicy("AlcadaSuficiente", politica => politica.AddRequirements(new AlcadaRequirement()));
+
+builder.Services.AddSingleton<IAuthorizationHandler, AlcadaHandler>();
 
 
 //
