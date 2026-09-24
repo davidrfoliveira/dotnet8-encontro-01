@@ -52,6 +52,7 @@ builder.Services.AddOptions<OpcoesJwt>()
 .Validate(o => o.Chave.Length >= 32, "Jwt:Chave precisa ter pelo menos 32 caracteres.")
 .ValidateOnStart();
 builder.Services.AddScoped<IServicoDeToken, ServicoDeToken>();
+builder.Services.AddScoped<IServicoDeSessao, ServicoDeSessao>();
 
 var jwt = builder.Configuration.GetSection(OpcoesJwt.Secao).Get<OpcoesJwt>() ?? new OpcoesJwt();
 builder.Services
