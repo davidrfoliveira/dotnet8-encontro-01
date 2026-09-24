@@ -73,6 +73,20 @@ builder.Services
         NameClaimType = "name",
         RoleClaimType = "role"
     };
+
+    opcoes.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async contexto =>
+        {
+            var usuarios = contexto.HttpContext.RequestServices.GetRequiredService<UserManager<Usuario>>();
+            var id = contexto.Principal?.FindFirst("sub")?.Value;
+            var stamp = contexto.Principal?.FindFirst("stamp")?.Value;
+
+            var usuario = id is null ? null : await usuarios.FindByIdAsync(id);
+            if (usuario is null || usuario.SecurityStamp != stamp)
+                contexto.Fail("Token revogado.");
+        }
+    };
 });
 
 builder.Services.AddAuthorization();

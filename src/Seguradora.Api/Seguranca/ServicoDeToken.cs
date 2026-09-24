@@ -23,7 +23,8 @@ public class ServicoDeToken : IServicoDeToken
             new(JwtRegisteredClaimNames.Sub, usuario.Id),
             new(JwtRegisteredClaimNames.Email, usuario.Email!),
             new(JwtRegisteredClaimNames.Name, usuario.NomeCompleto),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new("stamp", usuario.SecurityStamp!)
         };
         claims.AddRange(perfis.Select(perfil => new Claim("role", perfil)));
         if (usuario.SeguradoId is not null)
