@@ -95,7 +95,8 @@ builder.Services.AddAuthorizationBuilder()
         .RequireRole("Regulador", "Admin")
         .RequireClaim("alcada"))
     .AddPolicy("AlcadaSuficiente", politica => politica.AddRequirements(new AlcadaRequirement()))
-    .AddPolicy("AcessoAoSegurado", politica => politica.AddRequirements(new AcessoAoSeguradoRequirement()));
+    .AddPolicy("AcessoAoSegurado", politica => politica.AddRequirements(new AcessoAoSeguradoRequirement()))
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 builder.Services.AddSingleton<IAuthorizationHandler, AlcadaHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, AcessoAoSeguradoHandler>();
@@ -143,6 +144,15 @@ var app = builder.Build();
 
 app.UseMiddleware<TratamentoDeErroMiddleware>();
 
+app.Use(async (contexto, proximo) =>
+{
+    contexto.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    contexto.Response.Headers["X-Frame-Options"] = "DENY";
+    contexto.Response.Headers["Referrer-Policy"] = "no-referrer";
+    contexto.Response.Headers["Cache-Control"] = "no-store";
+    await proximo();
+});
+
 app.MapGet("/diagnostico/forcar-erro/{tipo}", (string tipo) =>
 {
     if (tipo == "argument") throw new ArgumentException("CPF inválido de propósito");
@@ -171,6 +181,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     await SeedDeDados.PopularAsync(app.Services);
     await SeedDeIdentidade.PopularAsync(app.Services);
+}
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
