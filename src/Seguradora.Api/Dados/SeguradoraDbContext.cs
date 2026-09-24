@@ -13,6 +13,7 @@ public class SeguradoraDbContext : IdentityDbContext<Usuario>
     public DbSet<Segurado> Segurados => Set<Segurado>();
     public DbSet<Apolice> Apolices => Set<Apolice>();
     public DbSet<Sinistro> Sinistros => Set<Sinistro>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     //configura a tabela no banco
     protected override void OnModelCreating(ModelBuilder modelBuilder)
