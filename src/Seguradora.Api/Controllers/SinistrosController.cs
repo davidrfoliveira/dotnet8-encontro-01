@@ -11,15 +11,39 @@ public class SinistrosController : ControllerBase
     private readonly ISinistroRepositorio _sinistros;
     private readonly IApoliceRepositorio _apolices;
     private readonly IAuthorizationService _autorizacao;
+    private readonly ILogger<SinistrosController> _logger;
 
     public SinistrosController(
         ISinistroRepositorio sinistros,
         IApoliceRepositorio apolices,
-        IAuthorizationService autorizacao)
+        IAuthorizationService autorizacao,
+        ILogger<SinistrosController> logger)
     {
         _sinistros = sinistros;
         _apolices = apolices;
         _autorizacao = autorizacao;
+        _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<SinistroResponse>>> Listar()
+    {
+        string? seguradoId = null;
+        SituacaoSinistro? situacao = null;
+        decimal? valorMaximo = null;
+
+        if (User.IsInRole("Segurado"))
+        {
+            seguradoId = User.SeguradoId() ?? string.Empty;
+        }
+        else if (User.IsInRole("Regulador") && !User.IsInRole("Admin"))
+        {
+            situacao = SituacaoSinistro.Aberto;
+            valorMaximo = User.Alcada() ?? 0m;
+        }
+
+        var sinistros = await _sinistros.ListarAsync(seguradoId, situacao, valorMaximo);
+        return Ok(sinistros.Select(SinistroResponse.De));
     }
 
     [HttpGet("{id}")]
@@ -66,7 +90,14 @@ public class SinistrosController : ControllerBase
 
         var alcada = await _autorizacao.AuthorizeAsync(User, sinistro, "AlcadaSuficiente");
         if (!alcada.Succeeded)
+        {
+            _logger.LogWarning(
+                "Análise negada por alçada: usuário {UsuarioId}, sinistro {SinistroId}",
+                User.FindFirst("sub")?.Value,
+                sinistro.Id);
+
             return StatusCode(StatusCodes.Status403Forbidden, new { erro = "Alçada insuficiente para o valor deste sinistro." });
+        }
 
         sinistro.Analisar();
         await _sinistros.SalvarAlteracoesAsync();
