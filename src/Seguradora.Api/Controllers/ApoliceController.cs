@@ -18,17 +18,18 @@ public class ApolicesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Apolice>>> Listar()
+    public async Task<ActionResult<IEnumerable<ApoliceResponse>>> Listar()
     {
         var seguradoId = User.IsInRole("Segurado")
             ? User.FindFirst("segurado_id")?.Value ?? string.Empty
             : null;
 
-        return Ok(await _repo.ListarAsync(seguradoId));
+        var apolices = await _repo.ListarAsync(seguradoId);
+        return Ok(apolices.Select(ApoliceResponse.De));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Apolice>> ObterPorId(string id)
+    public async Task<ActionResult<ApoliceResponse>> ObterPorId(string id)
     {
         var apolice = await _repo.ObterPorIdAsync(id);
         if (apolice is null) return NotFound();
@@ -36,18 +37,18 @@ public class ApolicesController : ControllerBase
         var acesso = await _autorizacao.AuthorizeAsync(User, apolice, "AcessoAoSegurado");
         if (!acesso.Succeeded) return NotFound();
 
-        return Ok(apolice);
+        return Ok(ApoliceResponse.De(apolice));
     }
 
     [Authorize(Roles = "Corretor,Admin")]
     [HttpPost("{id}/ativar")]
-    public async Task<ActionResult<Apolice>> Ativar(string id)
+    public async Task<ActionResult<ApoliceResponse>> Ativar(string id)
     {
         var apolice = await _repo.ObterPorIdAsync(id);
         if (apolice is null) return NotFound();
 
         apolice.Ativar();
         await _repo.SalvarAlteracoesAsync();
-        return Ok(apolice);
+        return Ok(ApoliceResponse.De(apolice));
     }
 }

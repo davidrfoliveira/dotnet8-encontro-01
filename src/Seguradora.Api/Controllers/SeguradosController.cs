@@ -14,13 +14,18 @@ public class SeguradosController : ControllerBase
     }
   
       [HttpGet]
-      public ActionResult<IEnumerable<Segurado>> Listar() => Ok(_repo.Listar());
+      public ActionResult<IEnumerable<SeguradoResponse>> Listar() =>
+        Ok(_repo.Listar().Select(SeguradoResponse.De));
 
       [HttpGet("{id}")]
-      public ActionResult<IEnumerable<Segurado>> ObterPorId(string id) => Ok(_repo.ObterPorId(id));
+      public ActionResult<SeguradoResponse> ObterPorId(string id)
+      {
+          var segurado = _repo.ObterPorId(id);
+          return segurado is null ? NotFound() : Ok(SeguradoResponse.De(segurado));
+      }
 
     [HttpPost]
-    public ActionResult<Segurado> Criar(SeguradoRequest requisicao)
+    public ActionResult<SeguradoResponse> Criar(SeguradoRequest requisicao)
     {
         var segurado = new Segurado
         {
@@ -31,6 +36,6 @@ public class SeguradosController : ControllerBase
 
         _repo.Adicionar(segurado);
 
-        return CreatedAtAction(nameof(ObterPorId), new {id = segurado.Id}, segurado);
+        return CreatedAtAction(nameof(ObterPorId), new { id = segurado.Id }, SeguradoResponse.De(segurado));
     }
 }
