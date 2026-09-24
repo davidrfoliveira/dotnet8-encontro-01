@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 namespace Seguradora.Api.Controllers;
 
 [Authorize]
@@ -25,7 +26,12 @@ public class SinistrosController : ControllerBase
     public async Task<ActionResult<SinistroResponse>> ObterPorId(string id)
     {
         var sinistro = await _sinistros.ObterPorIdAsync(id);
-        return sinistro is null ? NotFound() : Ok(SinistroResponse.De(sinistro));
+        if (sinistro is null) return NotFound();
+
+        var acesso = await _autorizacao.AuthorizeAsync(User, sinistro.Apolice, "AcessoAoSegurado");
+        if (!acesso.Succeeded) return NotFound();
+
+        return Ok(SinistroResponse.De(sinistro));
     }
 
     [HttpPost]
@@ -33,6 +39,10 @@ public class SinistrosController : ControllerBase
     {
         var apolice = await _apolices.ObterPorIdAsync(requisicao.ApoliceId);
         if (apolice is null) return NotFound();
+
+        var acesso = await _autorizacao.AuthorizeAsync(User, apolice, "AcessoAoSegurado");
+        if (!acesso.Succeeded) return NotFound();
+
         var sinistro = new Sinistro
         {
             Id = $"SIN-{DateTime.Now.Year}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}",
@@ -43,6 +53,7 @@ public class SinistrosController : ControllerBase
             ValorPleiteado = requisicao.ValorPleiteado
         };
         await _sinistros.AdicionarAsync(sinistro);
+
         return CreatedAtAction(nameof(ObterPorId), new { id = sinistro.Id }, SinistroResponse.De(sinistro));
     }
 
@@ -61,5 +72,4 @@ public class SinistrosController : ControllerBase
         await _sinistros.SalvarAlteracoesAsync();
         return Ok(SinistroResponse.De(sinistro));
     }
-
 }

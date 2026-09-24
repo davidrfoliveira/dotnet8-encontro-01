@@ -94,9 +94,11 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AnalistaDeSinistros", politica => politica
         .RequireRole("Regulador", "Admin")
         .RequireClaim("alcada"))
-    .AddPolicy("AlcadaSuficiente", politica => politica.AddRequirements(new AlcadaRequirement()));
+    .AddPolicy("AlcadaSuficiente", politica => politica.AddRequirements(new AlcadaRequirement()))
+    .AddPolicy("AcessoAoSegurado", politica => politica.AddRequirements(new AcessoAoSeguradoRequirement()));
 
 builder.Services.AddSingleton<IAuthorizationHandler, AlcadaHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, AcessoAoSeguradoHandler>();
 
 
 //

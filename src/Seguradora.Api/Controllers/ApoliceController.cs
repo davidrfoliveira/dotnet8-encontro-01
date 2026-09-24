@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 namespace Seguradora.Api.Controllers;
-
-
 
 [Authorize]
 [ApiController]
@@ -10,25 +9,43 @@ namespace Seguradora.Api.Controllers;
 public class ApolicesController : ControllerBase
 {
     private readonly IApoliceRepositorio _repo;
-    public ApolicesController(IApoliceRepositorio repo)
+    private readonly IAuthorizationService _autorizacao;
+
+    public ApolicesController(IApoliceRepositorio repo, IAuthorizationService autorizacao)
     {
         _repo = repo;
+        _autorizacao = autorizacao;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Apolice>>> Listar() =>Ok(await _repo.ListarAsync());
+    public async Task<ActionResult<IEnumerable<Apolice>>> Listar()
+    {
+        var seguradoId = User.IsInRole("Segurado")
+            ? User.FindFirst("segurado_id")?.Value ?? string.Empty
+            : null;
+
+        return Ok(await _repo.ListarAsync(seguradoId));
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<Apolice>> ObterPorId(string id)
     {
         var apolice = await _repo.ObterPorIdAsync(id);
-        return apolice is null ? NotFound() : Ok(apolice);
+        if (apolice is null) return NotFound();
+
+        var acesso = await _autorizacao.AuthorizeAsync(User, apolice, "AcessoAoSegurado");
+        if (!acesso.Succeeded) return NotFound();
+
+        return Ok(apolice);
     }
+
     [Authorize(Roles = "Corretor,Admin")]
     [HttpPost("{id}/ativar")]
     public async Task<ActionResult<Apolice>> Ativar(string id)
     {
         var apolice = await _repo.ObterPorIdAsync(id);
         if (apolice is null) return NotFound();
+
         apolice.Ativar();
         await _repo.SalvarAlteracoesAsync();
         return Ok(apolice);
