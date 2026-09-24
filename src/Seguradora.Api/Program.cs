@@ -3,6 +3,9 @@ using Seguradora.Api.Diagnostico;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +43,35 @@ builder.Services.AddIdentityCore<Usuario>(opcoes =>
     opcoes.Lockout.MaxFailedAccessAttempts = 5;
     opcoes.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
 }).AddRoles<IdentityRole>().AddEntityFrameworkStores<SeguradoraDbContext>().AddSignInManager();
+
+builder.Services.AddOptions<OpcoesJwt>()
+.Bind(builder.Configuration.GetSection(OpcoesJwt.Secao))
+.Validate(o => o.Chave.Length >= 32, "Jwt:Chave precisa ter pelo menos 32 caracteres.")
+.ValidateOnStart();
+builder.Services.AddScoped<IServicoDeToken, ServicoDeToken>();
+
+var jwt = builder.Configuration.GetSection(OpcoesJwt.Secao).Get<OpcoesJwt>() ?? new OpcoesJwt();
+builder.Services
+.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(opcoes =>
+{
+    opcoes.MapInboundClaims = false;
+    opcoes.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = jwt.Emissor,
+        ValidateAudience = true,
+        ValidAudience = jwt.Audiencia,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Chave)),
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
+        NameClaimType = "name",
+        RoleClaimType = "role"
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // builder.Services.AddControllers();
 
@@ -82,6 +114,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
