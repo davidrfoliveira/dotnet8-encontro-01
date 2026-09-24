@@ -2,6 +2,7 @@
 using Seguradora.Api.Diagnostico;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,16 @@ builder.Services.AddOptions<OpcoesDaSeguradora>()
     .Validate(o => o.FranquiaMinima > 0, "FranquiaMinima deve ser maior que zero.")
     .ValidateOnStart();
 
+
+//identity
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddIdentityCore<Usuario>(opcoes =>
+{
+    opcoes.Password.RequiredLength = 8;
+    opcoes.User.RequireUniqueEmail = true;
+    opcoes.Lockout.MaxFailedAccessAttempts = 5;
+    opcoes.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+}).AddRoles<IdentityRole>().AddEntityFrameworkStores<SeguradoraDbContext>().AddSignInManager();
 
 // builder.Services.AddControllers();
 
@@ -67,6 +78,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     await SeedDeDados.PopularAsync(app.Services);
+    await SeedDeIdentidade.PopularAsync(app.Services);
 }
 
 app.UseHttpsRedirection();
