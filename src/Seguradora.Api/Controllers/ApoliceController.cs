@@ -23,6 +23,7 @@ public class ApolicesController : ControllerBase
         var apolice = await _repo.ObterPorIdAsync(id);
         return apolice is null ? NotFound() : Ok(apolice);
     }
+    [Authorize(Roles = "Corretor,Admin")]
     [HttpPost("{id}/ativar")]
     public async Task<ActionResult<Apolice>> Ativar(string id)
     {

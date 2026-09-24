@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace Seguradora.Api.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Corretor,Admin")]
 [ApiController]
 [Route("segurados")]
 public class SeguradosController : ControllerBase
