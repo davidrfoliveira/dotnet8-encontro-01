@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace Seguradora.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("sinistros")]
 public class SinistrosController : ControllerBase

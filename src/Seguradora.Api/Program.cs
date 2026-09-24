@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,8 @@ builder.Services.AddOptions<OpcoesDaSeguradora>()
     .Bind(builder.Configuration.GetSection("Seguradora"))
     .Validate(o => o.FranquiaMinima > 0, "FranquiaMinima deve ser maior que zero.")
     .ValidateOnStart();
+
+
 
 
 //identity
@@ -73,6 +76,8 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+
+//
 // builder.Services.AddControllers();
 
 builder.Services.AddControllers()
@@ -80,9 +85,38 @@ builder.Services.AddControllers()
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(opcoes =>
+{
+    opcoes.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Cole apenas o token JWT (sem a palavra Bearer)."
+    });
+
+    opcoes.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+
+
+
 
 var app = builder.Build();
+
 app.UseMiddleware<TratamentoDeErroMiddleware>();
 
 app.MapGet("/diagnostico/forcar-erro/{tipo}", (string tipo) =>
@@ -92,14 +126,16 @@ app.MapGet("/diagnostico/forcar-erro/{tipo}", (string tipo) =>
     throw new Exception("Erro genérico de propósito");
 });
 
-app.MapGet("/diagnostico/ciclo-de-vida",  (IOperacaoTransient t1, IOperacaoTransient t2,
-   IOperacaoScoped s1, IOperacaoScoped s2,
-   IOperacaoSingleton g1, IOperacaoSingleton g2,
-   IServicoDiagnostico servico) =>
-  Results.Ok(new {    transient = new { direto1 = t1.OperacaoId, direto2 = t2.OperacaoId, viaServico = servico.TransientId },
-    scoped = new { direto1 = s1.OperacaoId, direto2 = s2.OperacaoId, viaServico = servico.ScopedId },
-    singleton = new { direto1 = g1.OperacaoId, direto2 = g2.OperacaoId, viaServico = servico.SingletonId }
-  }));
+app.MapGet("/diagnostico/ciclo-de-vida", (IOperacaoTransient t1, IOperacaoTransient t2,
+IOperacaoScoped s1, IOperacaoScoped s2,
+IOperacaoSingleton g1, IOperacaoSingleton g2,
+IServicoDiagnostico servico) =>
+Results.Ok(new
+{
+    transient = new { direto1 = t1.OperacaoId, direto2 = t2.OperacaoId, viaServico = servico.TransientId },
+    scoped = new { direto1 = s1.OperacaoId, direto2 = s2.OperacaoId, viaServico = servico.ScopedId },
+    singleton = new { direto1 = g1.OperacaoId, direto2 = g2.OperacaoId, viaServico = servico.SingletonId }
+}));
 
 
 
@@ -114,7 +150,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 
 app.UseAuthorization();
